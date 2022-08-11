@@ -117,8 +117,7 @@ public final class MutationStatusTestPair implements Serializable {
 
   @Override
   public int hashCode() {
-    //return Objects.hash(numberOfTestsRun, status, killingTests, succeedingTests, timeOutTests, runErrorTests, memoryErrorTests);
-    return Objects.hash(status, killingTests, succeedingTests, timeOutTests, runErrorTests, memoryErrorTests);
+    return Objects.hash(killingTests, succeedingTests, timeOutTests, runErrorTests, memoryErrorTests);
   }
 
   @Override
@@ -130,9 +129,7 @@ public final class MutationStatusTestPair implements Serializable {
       return false;
     }
     final MutationStatusTestPair other = (MutationStatusTestPair) obj;
-    //return numberOfTestsRun == other.numberOfTestsRun
-    return  status == other.status
-            && Objects.equals(killingTests, other.killingTests)
+    return  Objects.equals(killingTests, other.killingTests)
             && Objects.equals(succeedingTests, other.succeedingTests)
             && Objects.equals(timeOutTests, other.timeOutTests)
             && Objects.equals(runErrorTests, other.runErrorTests)

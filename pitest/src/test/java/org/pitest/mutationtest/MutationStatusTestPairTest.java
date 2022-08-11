@@ -9,7 +9,7 @@ public class MutationStatusTestPairTest {
   @Test
   public void shouldObeyHashcodeEqualsContract() {
     EqualsVerifier.simple().forClass(MutationStatusTestPair.class)
-        .withIgnoredFields("numberOfTestsRun")
+        .withIgnoredFields("numberOfTestsRun", "status")
         .verify();
   }
 
