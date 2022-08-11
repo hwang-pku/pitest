@@ -69,7 +69,7 @@ public class XMLReportListenerTest {
         .handleMutationResult(MutationTestResultMother.createClassResults(mr));
     final String expected = "<mutation detected='true' status='KILLED' numberOfTestsRun='3'><sourceFile>file</sourceFile>" +
             "<mutatedClass>clazz</mutatedClass><mutatedMethod>method</mutatedMethod><methodDescription>()I</methodDescription><lineNumber>42</lineNumber><mutator>mutator</mutator>" +
-            "<indexes><index>1</index></indexes><blocks><block>0</block></blocks><killingTests>foo|foo2</killingTests><succeedingTests>bar</succeedingTests><description>desc</description></mutation>\n";
+            "<indexes><index>1</index></indexes><blocks><block>0</block></blocks><killingTests>foo|foo2</killingTests><succeedingTests>bar</succeedingTests><timeoutTests></timeoutTests><runErrorTests></runErrorTests><memoryErrorTests></memoryErrorTests><description>desc</description></mutation>\n";
     assertThat(expected).isEqualTo(this.out.toString());
   }
 

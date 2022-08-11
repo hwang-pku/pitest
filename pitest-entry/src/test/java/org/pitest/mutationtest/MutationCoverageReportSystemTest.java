@@ -21,6 +21,7 @@ import static org.pitest.mutationtest.DetectionStatus.KILLED;
 import static org.pitest.mutationtest.DetectionStatus.NO_COVERAGE;
 import static org.pitest.mutationtest.DetectionStatus.RUN_ERROR;
 import static org.pitest.mutationtest.DetectionStatus.SURVIVED;
+import static org.pitest.mutationtest.DetectionStatus.TIMED_OUT;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,6 +61,7 @@ import com.example.MultipleMutations;
 import com.example.coverage.execute.samples.mutationMatrix.TestsForSimpleCalculator;
 import org.pitest.util.PitError;
 import org.pitest.util.Verbosity;
+import org.pitest.mutationtest.build.PercentAndConstantTimeoutStrategy;
 
 @Category(SystemTest.class)
 public class MutationCoverageReportSystemTest extends ReportTestBase {
@@ -203,19 +205,26 @@ public class MutationCoverageReportSystemTest extends ReportTestBase {
     this.data
     .setTargetTests(predicateFor("com.example.coverage.execute.samples.mutationMatrix.*"));
     this.data.setTargetClasses(asList("com.example.coverage.execute.samples.mutationMatrix.*"));
+    this.data.setExcludedMethods(asList("crash"));
     this.data.setExcludedClasses(asGlobs(TestsForSimpleCalculator.class));
     this.data.setFullMutationMatrix(true);
     this.data.addOutputFormats(Arrays.asList("XML"));
     this.data.setMutators(Arrays.asList("MATH"));
+    this.data.setTimeoutConstant(PercentAndConstantTimeoutStrategy.DEFAULT_CONSTANT);
+    this.data.setTimeoutFactor(PercentAndConstantTimeoutStrategy.DEFAULT_FACTOR);
     createAndRun();
     List<MutationResult> resultData = this.metaDataExtractor.getData();
     assertEquals(1, resultData.size());
     
     MutationResult mutation = resultData.get(0);
     assertEquals(KILLED, mutation.getStatus());
-    assertEquals(3, mutation.getNumberOfTestsRun());
+    assertEquals(5, mutation.getNumberOfTestsRun());
+    //assertEquals(3, mutation.getNumberOfTestsRun());
     assertEquals(2, mutation.getKillingTests().size());
     assertEquals(1, mutation.getSucceedingTests().size());
+    assertEquals(0, mutation.getMemoryErrorTests().size());
+    assertEquals(1, mutation.getTimeoutTests().size());
+    assertEquals(1, mutation.getRunErrorTests().size());
   }
 
   @Test(expected = PitHelpError.class)

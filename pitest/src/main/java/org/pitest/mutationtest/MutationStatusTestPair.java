@@ -17,6 +17,7 @@ package org.pitest.mutationtest;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,13 +25,24 @@ public final class MutationStatusTestPair implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private final int             numberOfTestsRun;
-  private final DetectionStatus status;
+  private int             numberOfTestsRun;
+  private DetectionStatus status;
   private final List<String>    killingTests;
   private final List<String>    succeedingTests;
+  private final List<String>    timeOutTests;
+  private final List<String>    runErrorTests;
+  private final List<String>    memoryErrorTests;
 
   public static MutationStatusTestPair notAnalysed(int testsRun, DetectionStatus status) {
-    return new MutationStatusTestPair(testsRun, status, Collections.emptyList(), Collections.emptyList());
+    return new MutationStatusTestPair(testsRun, status, Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+  }
+
+  public MutationStatusTestPair(final int numberOfTestsRun,
+                                final DetectionStatus status, final List<String> killingTests,
+                                final List<String> succeedingTests) {
+  this(numberOfTestsRun, status, killingTests, succeedingTests, Collections.emptyList(),
+        Collections.emptyList(), Collections.emptyList());
   }
 
   public MutationStatusTestPair(final int numberOfTestsRun,
@@ -41,10 +53,14 @@ public final class MutationStatusTestPair implements Serializable {
 
   public MutationStatusTestPair(final int numberOfTestsRun,
       final DetectionStatus status, final List<String> killingTests,
-      final List<String> succeedingTests) {
+      final List<String> succeedingTests, final List<String> timeOutTests,
+      final List<String> runErrorTests, final List<String> memoryErrorTests) {
     this.status = status;
-    this.killingTests = killingTests;
-    this.succeedingTests = succeedingTests;
+    this.killingTests = new LinkedList(killingTests);
+    this.succeedingTests = new LinkedList(succeedingTests);
+    this.timeOutTests = new LinkedList(timeOutTests);
+    this.runErrorTests = new LinkedList(runErrorTests);
+    this.memoryErrorTests = new LinkedList(memoryErrorTests);
     this.numberOfTestsRun = numberOfTestsRun;
   }
   
@@ -101,7 +117,8 @@ public final class MutationStatusTestPair implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(numberOfTestsRun, status, killingTests, succeedingTests);
+    //return Objects.hash(numberOfTestsRun, status, killingTests, succeedingTests, timeOutTests, runErrorTests, memoryErrorTests);
+    return Objects.hash(status, killingTests, succeedingTests, timeOutTests, runErrorTests, memoryErrorTests);
   }
 
   @Override
@@ -113,9 +130,78 @@ public final class MutationStatusTestPair implements Serializable {
       return false;
     }
     final MutationStatusTestPair other = (MutationStatusTestPair) obj;
-    return numberOfTestsRun == other.numberOfTestsRun
-            && status == other.status
+    //return numberOfTestsRun == other.numberOfTestsRun
+    return  status == other.status
             && Objects.equals(killingTests, other.killingTests)
-            && Objects.equals(succeedingTests, other.succeedingTests);
+            && Objects.equals(succeedingTests, other.succeedingTests)
+            && Objects.equals(timeOutTests, other.timeOutTests)
+            && Objects.equals(runErrorTests, other.runErrorTests)
+            && Objects.equals(memoryErrorTests, other.memoryErrorTests);
+  }
+
+  public void accumulate(MutationStatusTestPair status, String testName) {
+    this.numberOfTestsRun += status.numberOfTestsRun;
+
+    if (status.status.equals(DetectionStatus.KILLED)) {
+      if (!this.killingTests.contains(testName)) {
+        this.killingTests.add(testName);
+      }
+      this.succeedingTests.remove(testName);
+    } else if (status.status.equals(DetectionStatus.SURVIVED) && !this.killingTests.contains(testName)
+            && !this.succeedingTests.contains(testName)) {
+      this.succeedingTests.add(testName);
+    } else if (status.status.equals(DetectionStatus.MEMORY_ERROR)) {
+      if (!this.memoryErrorTests.contains(testName)) {
+        this.memoryErrorTests.add(testName);
+      }
+      this.succeedingTests.remove(testName);
+    } else if (status.status.equals(DetectionStatus.RUN_ERROR)) {
+      if (!this.runErrorTests.contains(testName)) {
+        this.runErrorTests.add(testName);
+      }
+      this.succeedingTests.remove(testName);
+    } else if (status.status.equals(DetectionStatus.TIMED_OUT)) {
+      if (!this.timeOutTests.contains(testName)) {
+        this.timeOutTests.add(testName);
+      }
+      this.succeedingTests.remove(testName);
+    }
+
+    if (!this.killingTests.isEmpty()) {
+      this.status = DetectionStatus.KILLED;
+    } else if (!this.runErrorTests.isEmpty()) {
+      this.status = DetectionStatus.RUN_ERROR;
+    } else if (!this.memoryErrorTests.isEmpty()) {
+      this.status = DetectionStatus.MEMORY_ERROR;
+    } else if (!this.timeOutTests.isEmpty()) {
+      this.status = DetectionStatus.TIMED_OUT;
+    } else if (!this.succeedingTests.isEmpty()) {
+      this.status = DetectionStatus.SURVIVED;
+    } else {
+      this.status = status.status;
+    }
+  }
+
+  public List<String> getTimeOutTests() {
+    return timeOutTests;
+  }
+
+  public List<String> getRunErrorTests() {
+    return runErrorTests;
+  }
+
+  public List<String> getMemoryErrorTests() {
+    return memoryErrorTests;
+  }
+
+  public void setErrorStatusAndName (DetectionStatus status, String testName) {
+    this.status = status;
+    if (this.status == DetectionStatus.RUN_ERROR) {
+      this.runErrorTests.add(testName);
+    } else if (this.status == DetectionStatus.MEMORY_ERROR) {
+      this.memoryErrorTests.add(testName);
+    } else if (this.status == DetectionStatus.TIMED_OUT) {
+      this.timeOutTests.add(testName);
+    }
   }
 }

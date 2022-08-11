@@ -15,6 +15,7 @@
 package org.pitest.mutationtest;
 
 import static org.pitest.functional.prelude.Prelude.putToMap;
+import static org.pitest.functional.prelude.Prelude.or;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -71,6 +72,15 @@ public class MutationStatusMap {
         .filter(hasStatus(DetectionStatus.STARTED))
         .map(toMutationDetails())
         .collect(Collectors.toList());
+  }
+
+  public Collection<MutationDetails> getCrashed() {
+  return this.mutationMap.entrySet().stream()
+    .filter(or(hasStatus(DetectionStatus.RUN_ERROR),
+            or(hasStatus(DetectionStatus.MEMORY_ERROR),
+               hasStatus(DetectionStatus.TIMED_OUT))))
+    .map(toMutationDetails())
+    .collect(Collectors.toList());
   }
 
   public Set<MutationDetails> allMutations() {

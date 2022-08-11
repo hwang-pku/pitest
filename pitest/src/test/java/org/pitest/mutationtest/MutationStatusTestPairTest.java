@@ -8,7 +8,9 @@ public class MutationStatusTestPairTest {
 
   @Test
   public void shouldObeyHashcodeEqualsContract() {
-    EqualsVerifier.forClass(MutationStatusTestPair.class).verify();
+    EqualsVerifier.simple().forClass(MutationStatusTestPair.class)
+        .withIgnoredFields("numberOfTestsRun")
+        .verify();
   }
 
 }
